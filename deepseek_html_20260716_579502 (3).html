@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KorianMC · Servidor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
+    <style>
+        /* ===== RESET Y BASE ===== */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #f0f0f0;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e63946;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d62839;
+        }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+        ul {
+            list-style: none;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ===== FONDO ===== */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            pointer-events: none;
+        }
+        .bg-layers {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .bg-layers .layer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-repeat: no-repeat;
+            background-position: center bottom;
+            background-size: cover;
+            opacity: 0.3;
+        }
+        .mountain1 {
+            background: radial-gradient(ellipse at 30% 100%, #1a1a2e 0%, transparent 70%);
+            height: 60%;
+            bottom: 0;
+            opacity: 0.5;
+        }
+        .mountain2 {
+            background: radial-gradient(ellipse at 70% 100%, #16213e 0%, transparent 60%);
+            height: 50%;
+            bottom: 0;
+            opacity: 0.4;
+        }
+        .mountain3 {
+            background: radial-gradient(ellipse at 50% 100%, #0f3460 0%, transparent 50%);
+            height: 40%;
+            bottom: 0;
+            opacity: 0.3;
+        }
+        .temple {
+            background: radial-gradient(ellipse at 50% 100%, #533483 0%, transparent 60%);
+            height: 35%;
+            bottom: 5%;
+            opacity: 0.2;
+            transform: scaleX(1.2);
+        }
+        .moon {
+            position: absolute;
+            top: 8%;
+            right: 10%;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #f5e6d3, #d4c5a0);
+            box-shadow: 0 0 80px rgba(212, 197, 160, 0.3), 0 0 150px rgba(212, 197, 160, 0.15);
+            opacity: 0.7;
+            animation: floatMoon 8s ease-in-out infinite;
+        }
+        @keyframes floatMoon {
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+        .sakura-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+        .sakura {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle at 30% 30%, #ffb7c5, #ff8a9c);
+            border-radius: 50% 0 50% 50%;
+            opacity: 0.6;
+            animation: fallSakura linear infinite;
+            filter: blur(0.5px);
+        }
+        @keyframes fallSakura {
+            0% {
+                transform: translateY(-10vh) rotate(0deg) scale(0.8);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7;
+            }
+            90% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(110vh) rotate(720deg) scale(1.2);
+                opacity: 0;
+            }
+        }
+        .fog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(255, 255, 255, 0.03) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
+            z-index: -1;
+            animation: fogMove 30s linear infinite;
+            pointer-events: none;
+            filter: blur(40px);
+        }
+        @keyframes fogMove {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 14px 0;
+            z-index: 1000;
+            background: rgba(10, 10, 10, 0.4);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+        .navbar.scrolled {
+            background: rgba(10, 10, 10, 0.75);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        .navbar .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #fff;
+        }
+        .nav-logo span {
+            color: #e63946;
+        }
+        .nav-links {
+            display: flex;
+            gap: 28px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            align-items: center;
+        }
+        .nav-links a {
+            color: #ddd;
+            transition: color 0.3s, transform 0.2s;
+            position: relative;
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #e63946;
+            transition: width 0.3s;
+        }
+        .nav-links a:hover {
+            color: #fff;
+        }
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        .nav-links .btn-nav {
+            background: linear-gradient(135deg, #e63946, #d62839);
+            padding: 8px 20px;
+            border-radius: 30px;
+            color: #fff !important;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(230, 57, 70, 0.3);
+        }
+        .nav-links .btn-nav:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(230, 57, 70, 0.5);
+        }
+        .nav-links .btn-nav::after {
+            display: none;
+        }
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 4px;
+        }
+        .hamburger span {
+            width: 28px;
+            height: 2px;
+            background: #fff;
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 24px 80px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-content {
+            max-width: 850px;
+            z-index: 2;
+            animation: heroFade 1.5s ease-out;
+        }
+        @keyframes heroFade {
+            0% {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .hero-badge {
+            display: inline-block;
+            background: rgba(230, 57, 70, 0.2);
+            backdrop-filter: blur(8px);
+            padding: 6px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ffb7c5;
+            border: 1px solid rgba(230, 57, 70, 0.25);
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+        }
+        .hero h1 {
+            font-size: clamp(3rem, 10vw, 6rem);
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 40%, #ffb7c5 70%, #e63946 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+            text-shadow: 0 0 80px rgba(230, 57, 70, 0.15);
+        }
+        .hero h1 .highlight {
+            background: linear-gradient(135deg, #e63946, #d62839);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            font-size: 1.2rem;
+            color: #bbb;
+            max-width: 560px;
+            margin: 0 auto 36px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #e63946, #d62839);
+            padding: 16px 44px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.25s, box-shadow 0.3s;
+            box-shadow: 0 8px 30px rgba(230, 57, 70, 0.35);
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 45px rgba(230, 57, 70, 0.55);
+        }
+        .btn-primary::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s;
+            pointer-events: none;
+        }
+        .btn-primary:hover::after {
+            opacity: 1;
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(8px);
+            padding: 16px 44px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            transition: transform 0.25s, background 0.3s, border 0.3s;
+        }
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: #888;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            animation: bounceDown 2s ease-in-out infinite;
+            cursor: pointer;
+        }
+        .scroll-indicator .arrow {
+            width: 20px;
+            height: 20px;
+            border-right: 2px solid #888;
+            border-bottom: 2px solid #888;
+            transform: rotate(45deg);
+            opacity: 0.6;
+        }
+        @keyframes bounceDown {
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+            50% {
+                transform: translateX(-50%) translateY(10px);
+            }
+        }
+
+        /* ===== SECCIONES ===== */
+        section {
+            padding: 70px 0;
+            position: relative;
+        }
+        .section-title {
+            font-size: clamp(2rem, 4.5vw, 3rem);
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+        .section-title .accent {
+            color: #e63946;
+        }
+        .section-sub {
+            text-align: center;
+            color: #aaa;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            font-size: 1.05rem;
+        }
+
+        /* ===== BIENVENIDA ===== */
+        .welcome {
+            background: radial-gradient(ellipse at 50% 0%, rgba(230, 57, 70, 0.04) 0%, transparent 70%);
+        }
+        .welcome-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+        .welcome-text h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .welcome-text h2 span {
+            color: #e63946;
+        }
+        .welcome-text p {
+            color: #ccc;
+            font-size: 1rem;
+            margin-bottom: 16px;
+            max-width: 500px;
+        }
+        .welcome-image .card-glass {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 30px 24px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+        .welcome-image .card-glass .icon-svg {
+            width: 64px;
+            height: 64px;
+            fill: none;
+            stroke: #e63946;
+            stroke-width: 1.5;
+            margin-bottom: 8px;
+        }
+        .welcome-image .card-glass h3 {
+            font-size: 1.3rem;
+            margin-bottom: 4px;
+        }
+        .welcome-image .card-glass p {
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+
+        /* ===== ICONOS SVG (line art) ===== */
+        .icon-svg {
+            width: 48px;
+            height: 48px;
+            fill: none;
+            stroke: #e63946;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .icon-svg-white {
+            stroke: #fff;
+        }
+        .icon-svg-sm {
+            width: 36px;
+            height: 36px;
+            stroke-width: 1.6;
+        }
+
+        /* ===== TARJETAS RANGOS ===== */
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 30px;
+        }
+        .rank-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 28px 20px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .rank-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            border-color: rgba(230, 57, 70, 0.2);
+        }
+        .rank-card .icon-svg {
+            width: 56px;
+            height: 56px;
+            stroke-width: 1.6;
+            margin-bottom: 8px;
+        }
+        .rank-card h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .rank-card p {
+            color: #bbb;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+        .rank-card .badge {
+            display: inline-block;
+            background: rgba(230, 57, 70, 0.15);
+            padding: 4px 16px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #ffb7c5;
+        }
+        .rank-card .price {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #e63946;
+            display: block;
+            margin: 10px 0 14px;
+        }
+        .rank-card .btn-small {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 8px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background 0.3s, transform 0.2s;
+            cursor: pointer;
+            display: inline-block;
+            pointer-events: none; /* lo manejamos desde el click en la card */
+        }
+        .rank-card .btn-small:hover {
+            background: rgba(230, 57, 70, 0.3);
+            transform: scale(1.05);
+            border-color: #e63946;
+        }
+
+        /* ===== MODAL RANGO ===== */
+        .rank-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .rank-modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .rank-modal {
+            background: rgba(20, 20, 30, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 28px;
+            max-width: 520px;
+            width: 100%;
+            padding: 40px 36px;
+            position: relative;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.7);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .rank-modal-overlay.active .rank-modal {
+            transform: scale(1);
+        }
+        .rank-modal .close-modal {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #aaa;
+            transition: color 0.3s;
+            background: none;
+            border: none;
+        }
+        .rank-modal .close-modal:hover {
+            color: #fff;
+        }
+        .rank-modal .modal-icon {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .rank-modal .modal-icon .icon-svg {
+            width: 72px;
+            height: 72px;
+            stroke-width: 1.6;
+        }
+        .rank-modal h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .rank-modal .modal-price {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #e63946;
+            margin-bottom: 16px;
+        }
+        .rank-modal .modal-desc {
+            color: #ccc;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .rank-modal .modal-benefits {
+            list-style: disc;
+            padding-left: 20px;
+            color: #ddd;
+            margin-bottom: 24px;
+        }
+        .rank-modal .modal-benefits li {
+            margin-bottom: 6px;
+        }
+        .rank-modal .btn-primary {
+            display: block;
+            width: 100%;
+            text-align: center;
+            padding: 14px;
+            font-size: 1.1rem;
+        }
+
+        /* ===== BENEFICIOS ===== */
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 24px;
+        }
+        .benefit-item {
+            text-align: center;
+            padding: 20px 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: transform 0.3s, background 0.3s;
+        }
+        .benefit-item:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .benefit-item .icon-svg {
+            width: 40px;
+            height: 40px;
+            stroke-width: 1.6;
+            margin-bottom: 6px;
+        }
+        .benefit-item h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+        .benefit-item p {
+            color: #999;
+            font-size: 0.85rem;
+        }
+
+        /* ===== FAQ ===== */
+        .faq-list {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .faq-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+        .faq-item:hover {
+            border-color: rgba(230, 57, 70, 0.2);
+        }
+        .faq-question {
+            padding: 16px 22px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        .faq-question:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .faq-question .arrow {
+            transition: transform 0.3s;
+            font-size: 1.2rem;
+        }
+        .faq-item.open .faq-question .arrow {
+            transform: rotate(180deg);
+        }
+        .faq-answer {
+            max-height: 0;
+            padding: 0 22px;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+            color: #bbb;
+            line-height: 1.6;
+        }
+        .faq-item.open .faq-answer {
+            max-height: 200px;
+            padding: 0 22px 18px;
+        }
+
+        /* ===== COMUNIDAD ===== */
+        .community-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 20px;
+            text-align: center;
+        }
+        .community-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 20px 12px;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        .community-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(230, 57, 70, 0.2);
+        }
+        .community-card .icon-svg {
+            width: 44px;
+            height: 44px;
+            stroke-width: 1.6;
+            margin-bottom: 6px;
+        }
+        .community-card h4 {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .community-card p {
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 30px 0 20px;
+            margin-top: 30px;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .footer-col h5 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        .footer-col ul li {
+            margin-bottom: 6px;
+        }
+        .footer-col ul li a {
+            color: #aaa;
+            transition: color 0.3s;
+            font-size: 0.9rem;
+        }
+        .footer-col ul li a:hover {
+            color: #fff;
+        }
+        .footer-bottom {
+            text-align: center;
+            color: #666;
+            font-size: 0.8rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            padding-top: 16px;
+        }
+        .footer-bottom span {
+            color: #e63946;
+        }
+
+        /* ===== REVEAL ===== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .welcome-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+        }
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                padding: 20px 0;
+                gap: 14px;
+                background: rgba(10, 10, 10, 0.95);
+                backdrop-filter: blur(18px);
+                border-radius: 0 0 20px 20px;
+            }
+            .nav-links.open {
+                display: flex;
+            }
+            .hamburger {
+                display: flex;
+            }
+            .hero h1 {
+                font-size: clamp(2.2rem, 10vw, 3.6rem);
+            }
+            .hero p {
+                font-size: 1rem;
+            }
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            .btn-primary,
+            .btn-secondary {
+                width: 100%;
+                max-width: 260px;
+                text-align: center;
+            }
+            .section-title {
+                font-size: 1.8rem;
+            }
+            .rank-modal {
+                padding: 30px 20px;
+            }
+        }
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 16px;
+            }
+            .rank-card {
+                padding: 20px 14px;
+            }
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== FONDO ===== -->
+    <canvas id="bg-canvas"></canvas>
+    <div class="bg-layers">
+        <div class="layer mountain1"></div>
+        <div class="layer mountain2"></div>
+        <div class="layer mountain3"></div>
+        <div class="layer temple"></div>
+        <div class="moon"></div>
+    </div>
+    <div class="fog"></div>
+    <div class="sakura-container" id="sakuraContainer"></div>
+
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="#" class="nav-logo">⛩️ <span>Korian</span>MC</a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#rangos">Rangos</a></li>
+                <li><a href="#beneficios">Beneficios</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#comunidad">Comunidad</a></li>
+                <li><a href="https://discord.gg/hyURjbcJ56" target="_blank" class="btn-nav">Discord</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="inicio">
+        <div class="hero-content">
+            <div class="hero-badge">✦ Nueva temporada</div>
+            <h1>Korian<span class="highlight">MC</span></h1>
+            <p>Un servidor fresco con temática japonesa. Únete y construye tu leyenda desde el inicio.</p>
+            <div class="hero-buttons">
+                <button class="btn-primary">✦ Unirse al Servidor</button>
+                <a href="https://discord.gg/hyURjbcJ56" target="_blank" class="btn-secondary">┃ Discord</a>
+            </div>
+        </div>
+        <div class="scroll-indicator" onclick="document.getElementById('bienvenida').scrollIntoView({behavior:'smooth'})">
+            <span>DESCUBRE</span>
+            <div class="arrow"></div>
+        </div>
+    </section>
+
+    <!-- ===== BIENVENIDA ===== -->
+    <section id="bienvenida" class="welcome">
+        <div class="container">
+            <div class="welcome-grid">
+                <div class="welcome-text reveal">
+                    <h2>Bienvenido a <span>KorianMC</span></h2>
+                    <p>Un servidor nuevo con una estética japonesa moderna. Aquí encontrarás una comunidad amable, eventos semanales y una experiencia única.</p>
+                    <p>Estamos en crecimiento, y queremos que formes parte de esta aventura desde el principio.</p>
+                </div>
+                <div class="welcome-image reveal">
+                    <div class="card-glass">
+                        <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" />
+                            <path d="M12 3v4" />
+                            <path d="M8 7h8" />
+                        </svg>
+                        <h3>Nuevo servidor</h3>
+                        <p>Todo por hacer, todo por descubrir. Tu oportunidad de destacar.</p>
+                        <div style="margin-top:14px;display:flex;gap:10px;justify-content:center;">
+                            <span style="background:#e63946;padding:4px 12px;border-radius:30px;font-size:0.7rem;font-weight:600;">↳ Online</span>
+                            <span style="background:rgba(255,255,255,0.06);padding:4px 12px;border-radius:30px;font-size:0.7rem;">Java + Bedrock</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== RANGOS ===== -->
+    <section id="rangos" style="background:radial-gradient(ellipse at 0% 50%, rgba(230,57,70,0.04) 0%, transparent 70%);">
+        <div class="container">
+            <h2 class="section-title reveal">Rangos <span class="accent">VIP</span></h2>
+            <p class="section-sub reveal">Elige tu rango y accede a ventajas exclusivas. Haz clic en cada uno para ver los detalles.</p>
+            <div class="grid-3" id="rankGrid">
+                <!-- Miembro -->
+                <div class="rank-card reveal" data-rank="miembro">
+                    <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M5.3 18.3C6.8 16.5 9.2 15 12 15s5.2 1.5 6.7 3.3" />
+                        <path d="M12 3v2" />
+                        <path d="M9 5l1 1" />
+                        <path d="M15 5l-1 1" />
+                    </svg>
+                    <h3>Miembro</h3>
+                    <p>Canjea con <strong>/koriamc</strong> y obtén vuelo por 1 semana.</p>
+                    <span class="price">Gratis</span>
+                    <span class="badge">Por defecto</span>
+                </div>
+                <!-- Minero -->
+                <div class="rank-card reveal" data-rank="minero">
+                    <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
+                        <path d="M12 22V12" />
+                    </svg>
+                    <h3>Minero</h3>
+                    <p>Ventajas en minería y economía.</p>
+                    <span class="price">$4.99</span>
+                    <span class="badge">VIP</span>
+                </div>
+                <!-- Emperador -->
+                <div class="rank-card reveal" data-rank="emperador">
+                    <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
+                        <path d="M12 22V12" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <h3>Emperador</h3>
+                    <p>Comandos especiales y respeto.</p>
+                    <span class="price">$9.99</span>
+                    <span class="badge">VIP</span>
+                </div>
+                <!-- Titan -->
+                <div class="rank-card reveal" data-rank="titan">
+                    <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
+                        <path d="M12 22V12" />
+                        <circle cx="12" cy="12" r="4" />
+                    </svg>
+                    <h3>Titan</h3>
+                    <p>Poder y privilegios superiores.</p>
+                    <span class="price">$14.99</span>
+                    <span class="badge">VIP+</span>
+                </div>
+                <!-- Kraken -->
+                <div class="rank-card reveal" data-rank="kraken">
+                    <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
+                        <path d="M12 22V12" />
+                        <circle cx="12" cy="12" r="5" />
+                    </svg>
+                    <h3>Kraken</h3>
+                    <p>Dominio de los océanos y más.</p>
+                    <span class="price">$19.99</span>
+                    <span class="badge">VIP++</span>
+                </div>
+                <!-- Triton -->
+                <div class="rank-card reveal" data-rank="triton">
+                    <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
+                        <path d="M12 22V12" />
+                        <circle cx="12" cy="12" r="6" />
+                    </svg>
+                    <h3>Triton</h3>
+                    <p>Legado marino y habilidades únicas.</p>
+                    <span class="price">$29.99</span>
+                    <span class="badge">Élite</span>
+                </div>
+                <!-- Creador -->
+                <div class="rank-card reveal" data-rank="creador">
+                    <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
+                        <path d="M12 22V12" />
+                        <circle cx="12" cy="12" r="7" />
+                    </svg>
+                    <h3>Creador</h3>
+                    <p>El rango supremo, todos los privilegios.</p>
+                    <span class="price">$49.99</span>
+                    <span class="badge">Legendario</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== MODAL RANGO ===== -->
+    <div class="rank-modal-overlay" id="rankModal">
+        <div class="rank-modal">
+            <button class="close-modal" id="closeModal">&times;</button>
+            <div class="modal-icon">
+                <svg class="icon-svg" id="modalIcon" viewBox="0 0 24 24" stroke="currentColor">
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M5.3 18.3C6.8 16.5 9.2 15 12 15s5.2 1.5 6.7 3.3" />
+                </svg>
+            </div>
+            <h2 id="modalTitle">Miembro</h2>
+            <div class="modal-price" id="modalPrice">Gratis</div>
+            <p class="modal-desc" id="modalDesc">Descripción del rango.</p>
+            <ul class="modal-benefits" id="modalBenefits">
+                <li>Beneficio 1</li>
+                <li>Beneficio 2</li>
+            </ul>
+            <button class="btn-primary" id="modalBuy">Canjear ahora</button>
+        </div>
+    </div>
+
+    <!-- ===== BENEFICIOS ===== -->
+    <section id="beneficios">
+        <div class="container">
+            <h2 class="section-title reveal">Beneficios <span class="accent">Exclusivos</span></h2>
+            <p class="section-sub reveal">Mejora tu experiencia con ventajas únicas</p>
+            <div class="benefits-grid">
+                <div class="benefit-item reveal">
+                    <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
+                        <path d="M12 22V12" />
+                        <circle cx="12" cy="12" r="2" />
+                    </svg>
+                    <h4>/fly</h4>
+                    <p>Vuela libremente</p>
+                </div>
+                <div class="benefit-item reveal">
+                    <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 6v6l4 2" />
+                    </svg>
+                    <h4>/afk</h4>
+                    <p>Modo ausente</p>
+                </div>
+                <div class="benefit-item reveal">
+                    <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M20 12H4M12 4v16" />
+                        <circle cx="12" cy="12" r="2" />
+                    </svg>
+                    <h4>Bonificación diaria</h4>
+                    <p>Recompensas cada día</p>
+                </div>
+                <div class="benefit-item reveal">
+                    <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M12 3L3 8l9 5 9-5-9-5z" />
+                        <path d="M3 13l9 5 9-5" />
+                        <path d="M3 18l9 5 9-5" />
+                    </svg>
+                    <h4>Protección total</h4>
+                    <p>Anti-trampas</p>
+                </div>
+                <div class="benefit-item reveal">
+                    <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M12 2v4M6 6l2 2M18 6l-2 2" />
+                        <circle cx="12" cy="12" r="4" />
+                        <path d="M12 16v6" />
+                    </svg>
+                    <h4>Eventos semanales</h4>
+                    <p>Actividades con premios</p>
+                </div>
+                <div class="benefit-item reveal">
+                    <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    <h4>Comunidad activa</h4>
+                    <p>Discord y foros</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FAQ ===== -->
+    <section id="faq" style="background:radial-gradient(ellipse at 0% 100%, rgba(230,57,70,0.04) 0%, transparent 60%);">
+        <div class="container">
+            <h2 class="section-title reveal">Preguntas <span class="accent">Frecuentes</span></h2>
+            <p class="section-sub reveal">Todo lo que necesitas saber</p>
+            <div class="faq-list">
+                <div class="faq-item reveal">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Cómo me uno al servidor?</span>
+                        <span class="arrow">▾</span>
+                    </div>
+                    <div class="faq-answer">Próximamente anunciaremos la IP. Mantente atento a nuestro Discord para más información.</div>
+                </div>
+                <div class="faq-item reveal">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Qué métodos de pago aceptan?</span>
+                        <span class="arrow">▾</span>
+                    </div>
+                    <div class="faq-answer">Aceptamos tarjetas, PayPal y criptomonedas a través de nuestra tienda.</div>
+                </div>
+                <div class="faq-item reveal">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Hay recompensas por invitar amigos?</span>
+                        <span class="arrow">▾</span>
+                    </div>
+                    <div class="faq-answer">Sí, nuestro programa de referidos te da beneficios por cada amigo que se una.</div>
+                </div>
+                <div class="faq-item reveal">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿El servidor es seguro?</span>
+                        <span class="arrow">▾</span>
+                    </div>
+                    <div class="faq-answer">Contamos con protección avanzada y un equipo de moderación activo.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== COMUNIDAD ===== -->
+    <section id="comunidad">
+        <div class="container">
+            <h2 class="section-title reveal">Comunidad <span class="accent">Korian</span></h2>
+            <p class="section-sub reveal">Conéctate con nosotros</p>
+            <div class="community-grid">
+                <a href="https://discord.gg/hyURjbcJ56" target="_blank" class="community-card reveal">
+                    <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                    <h4>Discord</h4>
+                    <p>Únete al chat</p>
+                </a>
+                <div class="community-card reveal">
+                    <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z" />
+                    </svg>
+                    <h4>Twitter</h4>
+                    <p>Noticias</p>
+                </div>
+                <div class="community-card reveal">
+                    <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor">
+                        <rect x="2" y="2" width="20" height="20" rx="2.18" />
+                        <circle cx="12" cy="12" r="4" />
+                        <circle cx="18" cy="6" r="1" />
+                    </svg>
+                    <h4>Instagram</h4>
+                    <p>Capturas</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h5>⛩️ KorianMC</h5>
+                    <ul>
+                        <li><a href="#inicio">Inicio</a></li>
+                        <li><a href="#rangos">Rangos</a></li>
+                        <li><a href="#beneficios">Beneficios</a></li>
+                        <li><a href="#faq">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Recursos</h5>
+                    <ul>
+                        <li><a href="#">Reglas</a></li>
+                        <li><a href="#">Mapa</a></li>
+                        <li><a href="#">Eventos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Legal</h5>
+                    <ul>
+                        <li><a href="#">Términos</a></li>
+                        <li><a href="#">Privacidad</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Redes</h5>
+                    <ul>
+                        <li><a href="https://discord.gg/hyURjbcJ56" target="_blank">Discord</a></li>
+                        <li><a href="#">Twitter</a></li>
+                        <li><a href="#">YouTube</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                &copy; 2026 KorianMC · Hecho con <span>❤</span> por la comunidad
+            </div>
+        </div>
+    </footer>
+
+    <!-- ===== JAVASCRIPT ===== -->
+    <script>
+        // =====================================================
+        // NAVBAR
+        // =====================================================
+        const hamburger = document.getElementById('hamburger');
+        const navLinks = document.getElementById('navLinks');
+        const navbar = document.getElementById('navbar');
+
+        hamburger.addEventListener('click', () => {
+            navLinks.classList.toggle('open');
+        });
+
+        window.addEventListener('scroll', () => {
+            navbar.classList.toggle('scrolled', window.scrollY > 60);
+        });
+
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => navLinks.classList.remove('open'));
+        });
+
+        // =====================================================
+        // SCROLL REVEAL
+        // =====================================================
+        const reveals = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -30px 0px' });
+        reveals.forEach(el => observer.observe(el));
+
+        // =====================================================
+        // SAKURA
+        // =====================================================
+        const sakuraContainer = document.getElementById('sakuraContainer');
+        for (let i = 0; i < 40; i++) {
+            const petal = document.createElement('div');
+            petal.className = 'sakura';
+            const size = 6 + Math.random() * 12;
+            petal.style.width = size + 'px';
+            petal.style.height = size + 'px';
+            petal.style.left = Math.random() * 100 + '%';
+            petal.style.animationDuration = 12 + Math.random() * 18 + 's';
+            petal.style.animationDelay = Math.random() * 20 + 's';
+            petal.style.opacity = 0.3 + Math.random() * 0.4;
+            sakuraContainer.appendChild(petal);
+        }
+
+        // =====================================================
+        // PARTÍCULAS CANVAS
+        // =====================================================
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let w, h;
+
+        function resizeCanvas() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * w;
+                this.y = Math.random() * h;
+                this.size = 1.2 + Math.random() * 2.5;
+                this.speedX = (Math.random() - 0.5) * 0.25;
+                this.speedY = (Math.random() - 0.5) * 0.25;
+                this.opacity = 0.2 + Math.random() * 0.5;
+                this.color = `hsla(${340 + Math.random() * 20}, 70%, 60%, ${this.opacity})`;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x < 0 || this.x > w) this.speedX *= -1;
+                if (this.y < 0 || this.y > h) this.speedY *= -1;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = 'rgba(230,57,70,0.2)';
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        for (let i = 0; i < 70; i++) particles.push(new Particle());
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, w, h);
+            particles.forEach(p => { p.update();
+                p.draw(); });
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 130) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(230,57,70,${0.08 * (1 - dist / 130)})`;
+                        ctx.lineWidth = 0.6;
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // =====================================================
+        // FAQ TOGGLE
+        // =====================================================
+        function toggleFaq(el) {
+            const item = el.closest('.faq-item');
+            const isOpen = item.classList.contains('open');
+            document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+            if (!isOpen) item.classList.add('open');
+        }
+
+        // =====================================================
+        // MODAL DE RANGOS (con datos actualizados)
+        // =====================================================
+        const rankData = {
+            miembro: {
+                icon: '<circle cx="12" cy="8" r="4"/><path d="M5.3 18.3C6.8 16.5 9.2 15 12 15s5.2 1.5 6.7 3.3"/><path d="M12 3v2"/><path d="M9 5l1 1"/><path d="M15 5l-1 1"/>',
+                title: 'Miembro',
+                price: 'Gratis',
+                desc: 'Canjea este rango escribiendo <strong>/koriamc</strong> en el servidor. Obtendrás el rango Miembro por 1 semana y acceso a <strong>/fly</strong> durante ese tiempo.',
+                benefits: ['Rango Miembro por 7 días', 'Comando /fly activo', 'Acceso completo al mundo', 'Participación en eventos'],
+                action: 'Canjear ahora'
+            },
+            minero: {
+                icon: '<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/><path d="M12 22V12"/>',
+                title: 'Minero',
+                price: '$4.99',
+                desc: 'Ventajas en minería y economía. Ideal para jugadores que disfrutan recolectar recursos.',
+                benefits: ['/fly (limitado)', 'Bonificación de recursos', 'Acceso a minas VIP'],
+                action: 'Comprar ahora'
+            },
+            emperador: {
+                icon: '<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/><path d="M12 22V12"/><circle cx="12" cy="12" r="3"/>',
+                title: 'Emperador',
+                price: '$9.99',
+                desc: 'Comandos especiales y respeto. Destaca entre la multitud con este rango.',
+                benefits: ['/fly ilimitado', '/afk', 'Chat de color', 'Título especial'],
+                action: 'Comprar ahora'
+            },
+            titan: {
+                icon: '<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/><path d="M12 22V12"/><circle cx="12" cy="12" r="4"/>',
+                title: 'Titan',
+                price: '$14.99',
+                desc: 'Poder y privilegios superiores. Conviértete en un titán del servidor.',
+                benefits: ['/fly + /afk', 'Acceso a zonas exclusivas', 'Mayor tasa de recursos', 'Kit especial'],
+                action: 'Comprar ahora'
+            },
+            kraken: {
+                icon: '<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/><path d="M12 22V12"/><circle cx="12" cy="12" r="5"/>',
+                title: 'Kraken',
+                price: '$19.99',
+                desc: 'Dominio de los océanos y más. Desata el poder del kraken.',
+                benefits: ['/fly, /afk, /nick', 'Efectos de partículas', 'Mascota exclusiva', 'Cofres diarios'],
+                action: 'Comprar ahora'
+            },
+            triton: {
+                icon: '<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/><path d="M12 22V12"/><circle cx="12" cy="12" r="6"/>',
+                title: 'Triton',
+                price: '$29.99',
+                desc: 'Legado marino y habilidades únicas. Un rango reservado para los más valientes.',
+                benefits: ['/fly, /afk, /nick, /hat', 'Acceso a eventos especiales', 'Recompensas diarias x2', 'Destacado en tablón'],
+                action: 'Comprar ahora'
+            },
+            creador: {
+                icon: '<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/><path d="M12 22V12"/><circle cx="12" cy="12" r="7"/>',
+                title: 'Creador',
+                price: '$49.99',
+                desc: 'El rango supremo, todos los privilegios. Eres una leyenda en KorianMC.',
+                benefits: ['Todos los comandos VIP', 'Acceso a todas las zonas', 'Recompensas máximas', 'Personalización de servidor', 'Soporte prioritario'],
+                action: 'Comprar ahora'
+            }
+        };
+
+        const modalOverlay = document.getElementById('rankModal');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalPrice = document.getElementById('modalPrice');
+        const modalDesc = document.getElementById('modalDesc');
+        const modalBenefits = document.getElementById('modalBenefits');
+        const modalBuy = document.getElementById('modalBuy');
+        const closeModal = document.getElementById('closeModal');
+
+        // Abrir modal al hacer clic en una tarjeta de rango
+        document.querySelectorAll('.rank-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                const rankKey = this.dataset.rank;
+                const data = rankData[rankKey];
+                if (!data) return;
+
+                modalIcon.innerHTML = data.icon;
+                modalTitle.textContent = data.title;
+                modalPrice.textContent = data.price;
+                modalDesc.innerHTML = data.desc; // permite HTML
+                modalBenefits.innerHTML = data.benefits.map(b => `<li>${b}</li>`).join('');
+                modalBuy.textContent = data.action;
+
+                modalOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+
+        // Cerrar modal
+        function closeRankModal() {
+            modalOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        closeModal.addEventListener('click', closeRankModal);
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === this) closeRankModal();
+        });
+
+        // Botón de acción (canjear o comprar)
+        modalBuy.addEventListener('click', function() {
+            const title = modalTitle.textContent;
+            if (title === 'Miembro') {
+                alert('¡Canjea el rango Miembro en el servidor con el comando /koriamc! Obtendrás el rango por 1 semana y /fly.');
+            } else {
+                alert('Funcionalidad de compra (simulación). ¡Gracias por tu interés!');
+            }
+            closeRankModal();
+        });
+
+        // =====================================================
+        // PARALLAX HERO
+        // =====================================================
+        const hero = document.querySelector('.hero');
+        window.addEventListener('scroll', () => {
+            const offset = window.scrollY;
+            if (offset < window.innerHeight) {
+                hero.style.backgroundPositionY = offset * 0.3 + 'px';
+            }
+        });
+
+        console.log('⛩️ KorianMC — Rango Miembro actualizado y sección de contacto eliminada.');
+    </script>
+</body>
+</html>
